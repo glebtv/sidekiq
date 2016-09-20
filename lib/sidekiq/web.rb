@@ -63,12 +63,17 @@ module Sidekiq
         @views ||= VIEWS
       end
 
-      # Helper for the Sinatra syntax: Sidekiq::Web.set(:session_secret, Rails.application.secrets...)
-      def set(attribute, value)
-        send(:"#{attribute}=", value)
+      def set(k, v)
+        Sidekiq.logger.warn("Sidekiq::Web.set is deprecated, remove any calls to it")
+      end
+      def session_secret=(x)
+        Sidekiq.logger.warn("Sidekiq::Web.session_secret is deprecated, remove any calls to it")
+      end
+      def sessions=(x)
+        Sidekiq.logger.warn("Sidekiq::Web.sessions is deprecated, remove any calls to it")
       end
 
-      attr_accessor :app_url, :session_secret, :redis_pool
+      attr_accessor :app_url, :redis_pool
       attr_writer :locales, :views
     end
 
