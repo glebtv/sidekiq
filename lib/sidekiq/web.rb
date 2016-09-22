@@ -7,6 +7,7 @@ require 'sidekiq/paginator'
 require 'sidekiq/web/helpers'
 
 require 'sidekiq/web/router'
+require 'sidekiq/web/csrf'
 require 'sidekiq/web/action'
 require 'sidekiq/web/application'
 
@@ -118,19 +119,6 @@ module Sidekiq
       middlewares = self.middlewares
       klass = self.class
 
-      unless using?(::Rack::Protection) || ENV['RACK_ENV'] == 'test'
-        middlewares.unshift [[::Rack::Protection, { use: :authenticity_token }], nil]
-      end
-
-      unless using? ::Rack::Session::Cookie
-        unless secret = Web.session_secret
-          require 'securerandom'
-          secret = SecureRandom.hex(64)
-        end
-
-        middlewares.unshift [[::Rack::Session::Cookie, { secret: secret }], nil]
-      end
-
       ::Rack::Builder.new do
         %w(stylesheets javascripts images).each do |asset_dir|
           map "/#{asset_dir}" do
@@ -139,6 +127,7 @@ module Sidekiq
         end
 
         middlewares.each {|middleware, block| use(*middleware, &block) }
+        use Sidekiq::Web::Csrf
 
         run WebApplication.new(klass)
       end
